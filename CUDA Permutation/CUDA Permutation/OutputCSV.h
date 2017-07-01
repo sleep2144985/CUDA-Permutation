@@ -1,16 +1,21 @@
 #pragma once
 #include<string>
+#include<fstream>
+#include<iomanip>
 using namespace std;
 
 class OutputCSV {
 private:
-    string _path;
+    ofstream fout;
 public:
     OutputCSV();
     OutputCSV(string path);
     ~OutputCSV();
 
-    // 輸出資料(參數自己加)
-    void WriteData();
+    // Write.
+    void WriteTitle(int blockCount, int threadCount, int targetRunTimes, int realRunTimes, int clock, int elementCount, int length, int permutationCount);
+    void WriteRowData(string permutation, int count, double percentage);
+
+    void Close();
 };
 

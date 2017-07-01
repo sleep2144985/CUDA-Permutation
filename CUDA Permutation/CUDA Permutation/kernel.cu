@@ -1,124 +1,104 @@
-
+#pragma once
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include <curand.h>
+#include <curand_kernel.h>
+#include <cstdio>
+#include <ctime>
+#include <cmath>
+#include <string>
 
 #include "InputCSV.h"
 #include "OutputCSV.h"
 
-#include <stdio.h>
 
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
+using namespace std;
 
-__global__ void addKernel(int *c, const int *a, const int *b)
-{
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
+
+// 設定每個kernel的亂數種子
+__global__ void SetupCurand(curandState *state, unsigned long seed) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    curand_init(seed, idx, 0, &state[idx]);
 }
+// 跑模擬
+__global__ void Simulate(curandState *states, int length, int elementCount, int times, unsigned int* countOfPermutation) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    curandState localState = states[idx];
+    float RANDOM = curand_uniform(&localState);
+    for (int k = 0; k < times; ++k) {
+        unsigned int index = 0;
+        for (int i = 0; i < length; ++i) {
+            unsigned int rand = curand(&localState);
+            unsigned int power = 1;
+            for (int j = 0; j < i; j++) { power *= elementCount; }
+            index += (rand % elementCount) * power;
+        }
+        countOfPermutation[index] += 1;
+    }
+    states[idx] = localState;
+};
 
-int main()
-{
-    const int arraySize = 5;
-    const int a[arraySize] = { 1, 2, 3, 4, 5 };
-    const int b[arraySize] = { 10, 20, 30, 40, 50 };
-    int c[arraySize] = { 0 };
+int main() {
+    unsigned long cStart = clock();
+    InputCSV inputFile("input.csv");
+    OutputCSV outputFile("output.csv");
+    const unsigned int RUN_TIMES = 10000000;
+    const int LENGTH = inputFile.getPermutationLength();
+    const string *ELEMENTS = inputFile.getPermutationElements();
+    const int ELEMENTS_SIZE = inputFile.getPermutationElementsCount();
 
-    // Add vectors in parallel.
-    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addWithCuda failed!");
-        return 1;
+    size_t *countOfPermutation;
+    size_t *dev_countOfPermutation;
+    size_t PERMUTATION_COUNT = pow(ELEMENTS_SIZE, LENGTH);
+    printf("總共有%u種排列組合\n", PERMUTATION_COUNT);
+
+    // 配置Host memory.
+    countOfPermutation = (size_t*) malloc(PERMUTATION_COUNT * sizeof(size_t));
+    // 配置Device memory.
+    cudaMalloc((void**) &dev_countOfPermutation, PERMUTATION_COUNT * sizeof(size_t));
+
+    unsigned int threads = 10;
+    unsigned int blocks = 10000;
+
+    unsigned int NumOfThread = blocks*threads, kernelRunTimes = ceil(RUN_TIMES / NumOfThread);
+    printf("Total times: %d\nBlock count: %d\nThread count: %d\nKernelRunTimes: %d\n", RUN_TIMES, blocks, threads, kernelRunTimes);
+
+    curandState* devStates;
+    cudaMalloc(&devStates, NumOfThread * sizeof(curandState));
+    SetupCurand<<<blocks, threads>>>(devStates, time(NULL));
+
+    Simulate<<<blocks, threads>>>(devStates, LENGTH, ELEMENTS_SIZE, kernelRunTimes, dev_countOfPermutation);
+
+    // Copy device memory to host.
+    cudaMemcpy(countOfPermutation, dev_countOfPermutation, PERMUTATION_COUNT * sizeof(size_t), cudaMemcpyDeviceToHost);
+    
+    unsigned long cEnd = clock();
+    printf("CUDA run %lu ms.\n", cEnd - cStart);
+    
+    printf("Output to file... \n");
+    // 算總共跑了幾次
+    size_t total = 0;
+    for (size_t i = 0; i < PERMUTATION_COUNT; i++) {
+        total += countOfPermutation[i];
     }
 
-    printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
-        c[0], c[1], c[2], c[3], c[4]);
-
-    // cudaDeviceReset must be called before exiting in order for profiling and
-    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaStatus = cudaDeviceReset();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
+    // 輸出
+    outputFile.WriteTitle(blocks, threads, RUN_TIMES, total, cEnd - cStart, ELEMENTS_SIZE,LENGTH, PERMUTATION_COUNT);
+    for (size_t i = 0; i < PERMUTATION_COUNT; i++) {
+        string symbols;
+        for (size_t j = 0; j < LENGTH; j++) {
+            size_t index = (size_t)((double)i / pow(ELEMENTS_SIZE, j)) % ELEMENTS_SIZE;
+            if (j == 0) { symbols = ELEMENTS[index] + symbols; }
+            else symbols = ELEMENTS[index] + "-" + symbols;
+        }
+        //printf("#%u %s appear %u times (%0.3f %%)\n", i, symbols.c_str(), countOfPermutation[i], ((double)countOfPermutation[i]/total) * 100);
+        outputFile.WriteRowData(symbols, countOfPermutation[i], (double) countOfPermutation[i] / total * 100);
     }
+    outputFile.Close();
+    //釋放Memory.
+    cudaFree(dev_countOfPermutation);
+    delete[] countOfPermutation;
 
+    printf("Finish.\n");
     return 0;
-}
-
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
-{
-    int *dev_a = 0;
-    int *dev_b = 0;
-    int *dev_c = 0;
-    cudaError_t cudaStatus;
-
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
-
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    cudaStatus = cudaMalloc((void**)&dev_a, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    cudaStatus = cudaMalloc((void**)&dev_b, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    // Copy input vectors from host memory to GPU buffers.
-    cudaStatus = cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-    cudaStatus = cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-    // Launch a kernel on the GPU with one thread for each element.
-    addKernel<<<1, size>>>(dev_c, dev_a, dev_b);
-
-    // Check for any errors launching the kernel
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
-    
-    // cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
-    cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto Error;
-    }
-
-    // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-Error:
-    cudaFree(dev_c);
-    cudaFree(dev_a);
-    cudaFree(dev_b);
-    
-    return cudaStatus;
 }

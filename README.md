@@ -7,4 +7,6 @@
 ## Output
 輸出所有元素的排列組合的機率。
 
-output.csv(還未決定)
+[output.csv(暫定格式)](data/output.csv)
+
+![output.csv](data/Screenshot01.png)

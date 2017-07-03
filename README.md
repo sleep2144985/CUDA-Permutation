@@ -1,4 +1,4 @@
-# CUDA-Permutation
+# CUDA-Permutation([Game-Simulation](https://github.com/Li-AnLin/Game-Simulation))
 用CUDA跑拉霸的排列組合與其機率。
 ## Input
 輸入包含單一轉盤的所有元素跟轉盤的數量。

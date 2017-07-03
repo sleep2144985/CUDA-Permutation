@@ -13,7 +13,7 @@ public:
     ~OutputCSV();
 
     // Write.
-    void WriteTitle(int blockCount, int threadCount, int targetRunTimes, int realRunTimes, int clock, int elementCount, int length, int permutationCount);
+    void WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length, unsigned int permutationCount);
     void WriteRowData(string permutation, int count, double percentage);
 
     void Close();

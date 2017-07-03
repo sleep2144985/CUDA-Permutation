@@ -38,11 +38,16 @@ __global__ void Simulate(curandState *states, int length, int elementCount, int 
     states[idx] = localState;
 };
 
-int main() {
+int main(int argc, char** argv) {
+    // 加入參數
+    if (argc != 3) { printf(".exe [input file] [output file]\n"); return 1; }
+    string intputPath = argv[1];
+    string outputPath = argv[2];
+
     unsigned long cStart = clock();
-    InputCSV inputFile("input.csv");
-    OutputCSV outputFile("output.csv");
-    const unsigned int RUN_TIMES = 10000000;
+    InputCSV inputFile(intputPath);
+    OutputCSV outputFile(outputPath);
+    const unsigned int RUN_TIMES = 100000000;
     const int LENGTH = inputFile.getPermutationLength();
     const string *ELEMENTS = inputFile.getPermutationElements();
     const int ELEMENTS_SIZE = inputFile.getPermutationElementsCount();
@@ -58,7 +63,7 @@ int main() {
     cudaMalloc((void**) &dev_countOfPermutation, PERMUTATION_COUNT * sizeof(size_t));
 
     unsigned int threads = 10;
-    unsigned int blocks = 10000;
+    unsigned int blocks = 1000;
 
     unsigned int NumOfThread = blocks*threads, kernelRunTimes = ceil(RUN_TIMES / NumOfThread);
     printf("Total times: %d\nBlock count: %d\nThread count: %d\nKernelRunTimes: %d\n", RUN_TIMES, blocks, threads, kernelRunTimes);
@@ -75,7 +80,7 @@ int main() {
     unsigned long cEnd = clock();
     printf("CUDA run %lu ms.\n", cEnd - cStart);
     
-    printf("Output to file... \n");
+    printf("Output to %s... \n", outputPath.c_str());
     // 算總共跑了幾次
     size_t total = 0;
     for (size_t i = 0; i < PERMUTATION_COUNT; i++) {

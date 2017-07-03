@@ -12,7 +12,7 @@ OutputCSV::OutputCSV(string path) {
 OutputCSV::~OutputCSV() {
 }
 
-void OutputCSV::WriteTitle(int blockCount, int threadCount, int targetRunTimes, int realRunTimes, int clock, int elementCount, int length, int permutationCount) {
+void OutputCSV::WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length, unsigned int permutationCount) {
     this->fout << "Block计秖," << blockCount << endl;
     this->fout << "Thread计秖," << threadCount << endl;
     this->fout << "箇戳家览Ω计," << targetRunTimes << endl;

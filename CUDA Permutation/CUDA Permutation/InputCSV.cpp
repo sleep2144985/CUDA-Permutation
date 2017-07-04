@@ -1,4 +1,5 @@
 #include "InputCSV.h"
+#include<iostream>
 
 vector<string> split(const string &source, const string &delim) {
     vector<string> ans;
@@ -18,21 +19,57 @@ InputCSV::InputCSV() {
 InputCSV::InputCSV(string path) {
     ifstream fin(path);
     string inputLine;
+	unsigned int inputLineCount = 0;
 
-    // 讀第一行.
-    getline(fin, inputLine);
-    // Split "," charactor.
-    vector<string> elements = split(inputLine, ",");
-    // 存到member variable.
-    this->_permutationElementsCount = elements.size() - 1;
-    this->_permutationElements = new string[this->_permutationElementsCount];
-    copy(elements.begin() + 1, elements.end(), this->_permutationElements);
+	// CSV elements
+	vector<string> titles;
+	vector<string> symbols;
+	string         reelCount;
+	vector<string> reelSet;
+	vector<string> winingSets;
 
-    // 讀第二行.
-    getline(fin, inputLine);
-    string lengthStr = split(inputLine, ",")[1];
-    
-    this->_permutationLength = atoi(lengthStr.c_str());
+	// Get titles [Symbol/ Reel count/ Reel/ Wining sets]
+	getline(fin,inputLine);
+	// Read line move to nextt line.
+	inputLineCount++;
+	// Split "," charactor.
+	titles = split(inputLine,",");
+
+
+	while(!fin.eof()){
+		getline(fin,inputLine);
+		// Split "," charactor.
+		// If this line dont contains elements break.
+		if(inputLine.empty()){
+			break;
+		}
+		vector<string> elements = split(inputLine,",");
+		
+		// First column is symbol.
+		symbols.push_back(elements[0]);
+		// Second column is reel count.
+		// Only read it at first line.
+		if(inputLineCount == 1){
+			reelCount = elements[1];
+		}
+		// Third column is reel set.
+		reelSet.push_back(elements[2]);
+		// Fourth column is wining set.
+		winingSets.push_back(elements[3]);
+		// Move to next line.
+		inputLineCount++;
+	}
+	// 存到member variable.
+	this->_permutationElementsCount = symbols.size();
+	this->_permutationElements = new string[this->_permutationElementsCount];
+	copy(symbols.begin(),symbols.end(),this->_permutationElements);
+
+	this->_permutationLength = atoi(reelCount.c_str());
+
+	printf("reel count: %d\n",this->_permutationLength);
+	for(int i = 0;i < this->_permutationElementsCount;i++){
+		std::cout << this->_permutationElements[i] << std::endl;
+	}
     
     fin.close();
 }

@@ -21,7 +21,7 @@ __global__ void SetupCurand(curandState *state, unsigned long seed) {
     curand_init(seed, idx, 0, &state[idx]);
 }
 // 跑模擬
-__global__ void Simulate(curandState *states, int length, int elementCount, int times, unsigned int* countOfPermutation) {
+__global__ void Simulate(curandState *states, int length, int elementCount, int times, size_t* countOfPermutation) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     curandState localState = states[idx];
     float RANDOM = curand_uniform(&localState);
@@ -41,8 +41,8 @@ __global__ void Simulate(curandState *states, int length, int elementCount, int 
 int main(int argc, char** argv) {
     // 加入參數
     if (argc != 3) { printf(".exe [input file] [output file]\n"); return 1; }
-    string intputPath = argv[1];
-    string outputPath = argv[2];
+	string intputPath = argv[1];
+	string outputPath = argv[2];
 
     unsigned long cStart = clock();
     InputCSV inputFile(intputPath);

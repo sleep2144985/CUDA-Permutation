@@ -26,9 +26,10 @@ InputCSV::InputCSV(string path) {
 	vector<string> symbols;
 	string         reelCount;
 	vector<string> reelSet;
-	vector<string> winingSets;
+	string         rowSize;
+	vector<string> winingSetFiles;
 
-	// Get titles [Symbol/ Reel count/ Reel/ Wining sets]
+	// Get titles [Symbol/ Reel count/ Reel/ Row size/ Wining sets]
 	getline(fin,inputLine);
 	// Read line move to nextt line.
 	inputLineCount++;
@@ -38,24 +39,39 @@ InputCSV::InputCSV(string path) {
 
 	while(!fin.eof()){
 		getline(fin,inputLine);
-		// Split "," charactor.
-		// If this line dont contains elements break.
+		
+		// If this line doesnt contains element then break.
 		if(inputLine.empty()){
 			break;
 		}
+
+		// Split "," charactor.
 		vector<string> elements = split(inputLine,",");
 		
 		// First column is symbol.
-		symbols.push_back(elements[0]);
-		// Second column is reel count.
+		if(!elements[1].empty()){
+			symbols.push_back(elements[0]);
+		}
+		
 		// Only read it at first line.
 		if(inputLineCount == 1){
+			// Second column is reel count.
 			reelCount = elements[1];
+			//Fourth column is row size.
+			rowSize = elements[3];
 		}
+
 		// Third column is reel set.
-		reelSet.push_back(elements[2]);
-		// Fourth column is wining set.
-		winingSets.push_back(elements[3]);
+		if(!elements[2].empty()){
+			reelSet.push_back(elements[2]);
+		}
+		
+
+		// Fifth column is wining set.
+		if(!elements[4].empty()){
+			winingSetFiles.push_back(elements[4]);
+		}
+		
 		// Move to next line.
 		inputLineCount++;
 	}
@@ -65,13 +81,12 @@ InputCSV::InputCSV(string path) {
 	copy(symbols.begin(),symbols.end(),this->_permutationElements);
 
 	this->_permutationLength = atoi(reelCount.c_str());
-
-	printf("reel count: %d\n",this->_permutationLength);
-	for(int i = 0;i < this->_permutationElementsCount;i++){
-		std::cout << this->_permutationElements[i] << std::endl;
-	}
     
     fin.close();
+}
+
+void InputCSV::OpenWiningSetFile(vector<string>& files){
+
 }
 
 

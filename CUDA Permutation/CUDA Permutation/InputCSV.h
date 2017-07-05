@@ -10,6 +10,9 @@ private:
     int _permutationLength;
     int _permutationElementsCount;
     string* _permutationElements;
+	
+	void OpenWiningSetFile(vector<string>&);
+
 public:
     InputCSV();
     InputCSV(string path);

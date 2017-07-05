@@ -1,0 +1,5 @@
+ , , 
+A,A,A
+ , , 
+
+(A - any symbol of the same)

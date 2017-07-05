@@ -24,6 +24,10 @@ void OutputCSV::WriteTitle(int blockCount, int threadCount, unsigned int targetR
     this->fout << "排列組合,出現次數,出現機率" << endl;
 }
 
+void OutputCSV::WriteWinningRate(string name,int count,double percentage){
+	this->fout << name << "," << count << "," << percentage << endl;
+}
+
 void OutputCSV::WriteRowData(string permutation, int count, double percentage) {
     this->fout << permutation << "," << count << "," << percentage << "%" << endl;
 }

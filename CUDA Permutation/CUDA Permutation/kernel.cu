@@ -99,6 +99,15 @@ int main(int argc, char** argv) {
         //printf("#%u %s appear %u times (%0.3f %%)\n", i, symbols.c_str(), countOfPermutation[i], ((double)countOfPermutation[i]/total) * 100);
         outputFile.WriteRowData(symbols, countOfPermutation[i], (double) countOfPermutation[i] / total * 100);
     }
+
+	//output winning rate ot csv file.
+	for(int i = 0;i < inputFile.getWinningSetSize();i++){
+		//[TEMP]
+		outputFile.WriteWinningRate(inputFile.getWinningSetName(i),0,0);
+	}
+	
+
+
     outputFile.Close();
     //ÄÀ©ñMemory.
     cudaFree(dev_countOfPermutation);

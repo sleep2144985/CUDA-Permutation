@@ -15,6 +15,7 @@ public:
     // Write.
     void WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length, unsigned int permutationCount);
     void WriteRowData(string permutation, int count, double percentage);
+	void WriteWinningRate(string name,int count,double percentage);
 
     void Close();
 };

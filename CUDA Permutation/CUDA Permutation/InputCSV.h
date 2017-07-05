@@ -18,9 +18,10 @@ private:
 
 	int _permutationWiningSetCount;
 	string* _permutationWiningSets;
+	string* _winningSetNames;
 
 	
-	vector<string> OpenWiningSetFile(vector<string>&);
+	bool  OpenWiningSetFile(vector<string>&,vector<string>&);
 
 public:
     InputCSV();
@@ -33,5 +34,21 @@ public:
     int getPermutationElementsCount();
     // 取得排列組合的元素(string array)
     string* getPermutationElements();
+
+	// get row size.
+	int getReelRowSize();
+
+	// get reel set size
+	int getReelSetSize();
+	// get reel set.
+	int* getReelSet();
+
+	// get winning sets size
+	int getWinningSetSize();
+	// get wining sets name
+	string getWinningSetName(int);
+	// get winning sets
+	string* getWinningSets();
+
 };
 

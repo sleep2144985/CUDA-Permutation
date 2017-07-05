@@ -28,6 +28,7 @@ InputCSV::InputCSV(string path) {
 	vector<int> reelSet;
 	string         rowSize;
 	vector<string> winingSetFiles;
+	//[Need Improve Data Structure] 
 	vector<string> winingSets;
 
 	// Get titles [Symbol/ Reel count/ Reel/ Row size/ Wining sets]
@@ -94,9 +95,14 @@ InputCSV::InputCSV(string path) {
 
 	// Row size.
 	this->_permutationRowSize = atoi(rowSize.c_str());
+	//Winning sets name.
+	this->_winningSetNames = new string[winingSetFiles.size()];
+	copy(winingSetFiles.begin(),winingSetFiles.end(),_winningSetNames);
 
 	// Winning sets.
-	winingSets = OpenWiningSetFile(winingSetFiles);
+	if(!OpenWiningSetFile(winingSetFiles,winingSets)){
+		// open faliure.
+	}
 	this->_permutationWiningSetCount = winingSets.size();
 	this->_permutationWiningSets = new string[this->_permutationWiningSetCount];
 	copy(winingSets.begin(),winingSets.end(),this->_permutationWiningSets);
@@ -104,8 +110,25 @@ InputCSV::InputCSV(string path) {
     fin.close();
 }
 
-vector<string> InputCSV::OpenWiningSetFile(vector<string>& files){
-
+bool InputCSV::OpenWiningSetFile(vector<string>& files,vector<string>& winingSets){
+	fstream fin;
+	// open every files and load into WiningSets.
+	for(string& file : files){
+		string set;
+		fin.open(file);
+		if(fin.fail()){
+			return false;
+		}
+		string inputLine;
+		while(!fin.eof()){
+			getline(fin,inputLine);
+			set = set + "|" + inputLine;
+		}
+		cout << set << endl;
+		winingSets.push_back(set);
+		fin.close();
+	}
+	return true;
 }
 
 
@@ -114,6 +137,7 @@ InputCSV::~InputCSV() {
 	delete[] _permutationReelSets;
 	delete[] _permutationElements;
 	delete[] _permutationWiningSets;
+	delete[] _winningSetNames;
 }
 
 int InputCSV::getPermutationLength() {
@@ -126,4 +150,30 @@ int InputCSV::getPermutationElementsCount() {
 
 string* InputCSV::getPermutationElements() {
     return this->_permutationElements;
+}
+
+int InputCSV::getWinningSetSize(){
+	return _permutationWiningSetCount;
+}
+
+string InputCSV::getWinningSetName(int i){
+	return _winningSetNames[i];
+}
+
+// get row size.
+int InputCSV::getReelRowSize(){
+	return _permutationRowSize;
+}
+
+// get reel set size
+int InputCSV::getReelSetSize(){
+	return _permutationReelSetCount;
+}
+// get reel set.
+int* InputCSV::getReelSet(){
+	return _permutationReelSets;
+}
+// get winning sets
+string* InputCSV::getWinningSets(){
+	return _permutationWiningSets;
 }

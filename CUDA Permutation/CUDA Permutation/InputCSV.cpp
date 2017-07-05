@@ -100,17 +100,17 @@ InputCSV::InputCSV(string path) {
 	copy(winingSetFiles.begin(),winingSetFiles.end(),_winningSetNames);
 
 	// Winning sets.
-	if(!OpenWiningSetFile(winingSetFiles,winingSets)){
+	if(!OpenWinningSetFile(winingSetFiles,winingSets)){
 		// open faliure.
 	}
-	this->_permutationWiningSetCount = winingSets.size();
-	this->_permutationWiningSets = new int[this->_permutationWiningSetCount*this->_permutationRowSize*this->_permutationColumnSize];
+	this->_permutationWiningSetsCount = winingSets.size() / this->_permutationRowSize / this->_permutationColumnSize;
+	this->_permutationWiningSets = new int[winingSets.size()];
 	copy(winingSets.begin(),winingSets.end(),this->_permutationWiningSets);
 
     fin.close();
 }
 
-bool InputCSV::OpenWiningSetFile(vector<string>& files,vector<int>& winingSets){
+bool InputCSV::OpenWinningSetFile(vector<string>& files,vector<int>& winingSets){
 	fstream fin;
 	// open every files and load into WiningSets.
 	for(string& file : files){
@@ -145,7 +145,7 @@ InputCSV::~InputCSV() {
 	delete[] _winningSetNames;
 }
 
-int InputCSV::getPermutationLength() {
+int InputCSV::getPermutationColumnSize() {
     return this->_permutationColumnSize;
 }
 
@@ -157,8 +157,8 @@ string* InputCSV::getPermutationElements() {
     return this->_permutationElements;
 }
 
-int InputCSV::getWinningSetSize(){
-	return _permutationWiningSetCount;
+int InputCSV::getWinningSetsSize(){
+	return _permutationWiningSetsCount;
 }
 
 string InputCSV::getWinningSetName(int i){

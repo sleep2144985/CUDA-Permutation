@@ -7,7 +7,7 @@ using namespace std;
 
 class InputCSV {
 private:
-    int _permutationLength;
+    int _permutationColumnSize;
 	int _permutationRowSize;
 
 	int _permutationReelSetCount;
@@ -17,11 +17,11 @@ private:
     string* _permutationElements;
 
 	int _permutationWiningSetCount;
-	string* _permutationWiningSets;
+	int* _permutationWiningSets;
 	string* _winningSetNames;
 
 	
-	bool  OpenWiningSetFile(vector<string>&,vector<string>&);
+	bool  OpenWiningSetFile(vector<string>&,vector<int>&);
 
 public:
     InputCSV();
@@ -48,7 +48,7 @@ public:
 	// get wining sets name
 	string getWinningSetName(int);
 	// get winning sets
-	string* getWinningSets();
+	int* getWinningSets();
 
 };
 

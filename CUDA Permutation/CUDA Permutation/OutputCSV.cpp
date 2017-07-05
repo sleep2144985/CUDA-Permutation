@@ -12,7 +12,7 @@ OutputCSV::OutputCSV(string path) {
 OutputCSV::~OutputCSV() {
 }
 
-void OutputCSV::WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length, unsigned int permutationCount) {
+void OutputCSV::WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length,int reelRowSize) {
     this->fout << "Block數量," << blockCount << endl;
     this->fout << "Thread數量," << threadCount << endl;
     this->fout << "預期模擬次數," << targetRunTimes << endl;
@@ -20,11 +20,11 @@ void OutputCSV::WriteTitle(int blockCount, int threadCount, unsigned int targetR
     this->fout << "執行時間(ms)," << clock << endl;
     this->fout << "元素個數," << elementCount << endl;
     this->fout << "轉盤個數," << length << endl;
-    this->fout << "排列組合總數," << permutationCount << endl;
-    this->fout << "排列組合,出現次數,出現機率" << endl;
+	this->fout << "出現個數," << reelRowSize << endl;
+    this->fout << "中獎組合,出現次數,出現機率" << endl;
 }
 
-void OutputCSV::WriteWinningRate(string name,int count,double percentage){
+void OutputCSV::WriteWinningRate(string name,size_t count,double percentage){
 	this->fout << name << "," << count << "," << percentage << endl;
 }
 

@@ -25,11 +25,11 @@ InputCSV::InputCSV(string path) {
 	vector<string> titles;
 	vector<string> symbols;
 	string         reelCount;
-	vector<int> reelSet;
+	vector<int>    reelSet;
 	string         rowSize;
 	vector<string> winingSetFiles;
 	//[Need Improve Data Structure] 
-	vector<string> winingSets;
+	vector<int>    winingSets;
 
 	// Get titles [Symbol/ Reel count/ Reel/ Row size/ Wining sets]
 	getline(fin,inputLine);
@@ -51,7 +51,7 @@ InputCSV::InputCSV(string path) {
 		vector<string> elements = split(inputLine,",");
 		
 		// First column is symbol.
-		if(!elements[1].empty()){
+		if(!elements[0].empty()){
 			symbols.push_back(elements[0]);
 		}
 		
@@ -85,7 +85,7 @@ InputCSV::InputCSV(string path) {
 	copy(symbols.begin(),symbols.end(),this->_permutationElements);
 
 	// Reel Count.
-	this->_permutationLength = atoi(reelCount.c_str());
+	this->_permutationColumnSize = atoi(reelCount.c_str());
 
 	// Reel setting.
 	// -1 for any symbol
@@ -104,17 +104,18 @@ InputCSV::InputCSV(string path) {
 		// open faliure.
 	}
 	this->_permutationWiningSetCount = winingSets.size();
-	this->_permutationWiningSets = new string[this->_permutationWiningSetCount];
+	this->_permutationWiningSets = new int[this->_permutationWiningSetCount*this->_permutationRowSize*this->_permutationColumnSize];
 	copy(winingSets.begin(),winingSets.end(),this->_permutationWiningSets);
 
     fin.close();
 }
 
-bool InputCSV::OpenWiningSetFile(vector<string>& files,vector<string>& winingSets){
+bool InputCSV::OpenWiningSetFile(vector<string>& files,vector<int>& winingSets){
 	fstream fin;
 	// open every files and load into WiningSets.
 	for(string& file : files){
 		string set;
+		vector<vector<string>> tempName;
 		fin.open(file);
 		if(fin.fail()){
 			return false;
@@ -122,10 +123,14 @@ bool InputCSV::OpenWiningSetFile(vector<string>& files,vector<string>& winingSet
 		string inputLine;
 		while(!fin.eof()){
 			getline(fin,inputLine);
-			set = set + "|" + inputLine;
+			tempName.push_back(split(inputLine,","));
 		}
-		cout << set << endl;
-		winingSets.push_back(set);
+
+		for(int i = 0;i < tempName[0].size();i++){
+			for(int j = 0;j < tempName.size();j++){
+				winingSets.push_back(atoi(tempName[j][i].c_str()));
+			}
+		}
 		fin.close();
 	}
 	return true;
@@ -141,7 +146,7 @@ InputCSV::~InputCSV() {
 }
 
 int InputCSV::getPermutationLength() {
-    return this->_permutationLength;
+    return this->_permutationColumnSize;
 }
 
 int InputCSV::getPermutationElementsCount() {
@@ -174,6 +179,6 @@ int* InputCSV::getReelSet(){
 	return _permutationReelSets;
 }
 // get winning sets
-string* InputCSV::getWinningSets(){
+int* InputCSV::getWinningSets(){
 	return _permutationWiningSets;
 }

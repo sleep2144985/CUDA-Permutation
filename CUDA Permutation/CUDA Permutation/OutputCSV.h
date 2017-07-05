@@ -13,9 +13,9 @@ public:
     ~OutputCSV();
 
     // Write.
-    void WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length, unsigned int permutationCount);
+    void WriteTitle(int blockCount, int threadCount, unsigned int targetRunTimes, unsigned int realRunTimes, unsigned long clock, int elementCount, int length,int reelRowSize);
     void WriteRowData(string permutation, int count, double percentage);
-	void WriteWinningRate(string name,int count,double percentage);
+	void WriteWinningRate(string name,size_t count,double percentage);
 
     void Close();
 };

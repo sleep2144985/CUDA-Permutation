@@ -25,9 +25,10 @@ InputCSV::InputCSV(string path) {
 	vector<string> titles;
 	vector<string> symbols;
 	string         reelCount;
-	vector<string> reelSet;
+	vector<int> reelSet;
 	string         rowSize;
 	vector<string> winingSetFiles;
+	vector<string> winingSets;
 
 	// Get titles [Symbol/ Reel count/ Reel/ Row size/ Wining sets]
 	getline(fin,inputLine);
@@ -63,7 +64,7 @@ InputCSV::InputCSV(string path) {
 
 		// Third column is reel set.
 		if(!elements[2].empty()){
-			reelSet.push_back(elements[2]);
+			reelSet.push_back(atoi(elements[2].c_str()));
 		}
 		
 
@@ -76,21 +77,43 @@ InputCSV::InputCSV(string path) {
 		inputLineCount++;
 	}
 	// ¦s¨ìmember variable.
+
+	// Symbols.
 	this->_permutationElementsCount = symbols.size();
 	this->_permutationElements = new string[this->_permutationElementsCount];
 	copy(symbols.begin(),symbols.end(),this->_permutationElements);
 
+	// Reel Count.
 	this->_permutationLength = atoi(reelCount.c_str());
-    
+
+	// Reel setting.
+	// -1 for any symbol
+	this->_permutationReelSetCount = reelSet.size();
+	this->_permutationReelSets = new int[this->_permutationReelSetCount];
+	copy(reelSet.begin(),reelSet.end(),this->_permutationReelSets);
+
+	// Row size.
+	this->_permutationRowSize = atoi(rowSize.c_str());
+
+	// Winning sets.
+	winingSets = OpenWiningSetFile(winingSetFiles);
+	this->_permutationWiningSetCount = winingSets.size();
+	this->_permutationWiningSets = new string[this->_permutationWiningSetCount];
+	copy(winingSets.begin(),winingSets.end(),this->_permutationWiningSets);
+
     fin.close();
 }
 
-void InputCSV::OpenWiningSetFile(vector<string>& files){
+vector<string> InputCSV::OpenWiningSetFile(vector<string>& files){
 
 }
 
 
 InputCSV::~InputCSV() {
+	// delete
+	delete[] _permutationReelSets;
+	delete[] _permutationElements;
+	delete[] _permutationWiningSets;
 }
 
 int InputCSV::getPermutationLength() {

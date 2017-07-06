@@ -17,13 +17,13 @@ using namespace std;
 
 __device__ bool Compare(int* set, int* winningSet, int size) {
     int Any = 0;
-    for (int i = 0; i < size; i++) {
-        if (winningSet[i] > 0) {
+	for(int i = 0; i < size; i++){
+		if(set[i] != -1 && winningSet[i] > 0){
             // ordinary compare
             if (set[i] != winningSet[i]) {
                 return false;
             }
-        } else if (winningSet[i] == -1) {
+        } else if (set[i] != -1 && winningSet[i] == -1) {
             // any
             if (Any == 0) {
                 Any = set[i];
@@ -38,12 +38,12 @@ __device__ bool Compare(int* set, int* winningSet, int size) {
     return true;
 }
 
-// ³]©w¨C­Ókernelªº¶Ã¼ÆºØ¤l
+// è¨­å®šæ¯å€‹kernelçš„äº‚æ•¸ç¨®å­
 __global__ void SetupCurand(curandState *state, unsigned long seed) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     curand_init(seed, idx, 0, &state[idx]);
 }
-// ¶]¼ÒÀÀ
+// è·‘æ¨¡æ“¬
 __global__ void Simulate(curandState *states, int colunmSize, int rowSize, int* reelSets, int reelSetSize, int* winningSets, int winningSetSize, size_t runTimes, size_t* winningSetCount) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     curandState localState = states[idx];
@@ -69,7 +69,7 @@ __global__ void Simulate(curandState *states, int colunmSize, int rowSize, int* 
 };
 
 int main(int argc, char** argv) {
-    // ¥[¤J°Ñ¼Æ
+    // åŠ å…¥åƒæ•¸
     if(argc != 3){ printf(".exe [input file] [output file]\n"); return 1; }
     string intputPath = argv[1];
     string outputPath = argv[2];
@@ -102,18 +102,18 @@ int main(int argc, char** argv) {
     int* dev_winningSets;
 
 
-    // ³]©w thread & block.
+    // è¨­å®š thread & block.
     unsigned int threads = 10;
     unsigned int blocks = 1000;
 
     unsigned int NumOfThread = blocks * threads, kernelRunTimes = ceil(RUN_TIMES / NumOfThread);
     printf("Total times: %d\nBlock count: %d\nThread count: %d\nKernelRunTimes: %d\n", RUN_TIMES, blocks, threads, kernelRunTimes);
 
-    // °t¸mHost memory.
+    // é…ç½®Host memory.
     winningSetCount = (size_t*) malloc(WINNING_SETS_SIZE * sizeof(size_t));
 
 
-    // °t¸mDevice memory.
+    // é…ç½®Device memory.
     cudaMalloc((void**) &dev_winningSetCount, WINNING_SETS_SIZE * sizeof(size_t));
 
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     cudaMemcpy(winningSetCount, dev_winningSetCount, WINNING_SETS_SIZE * sizeof(size_t), cudaMemcpyDeviceToHost);
 
 
-    //ÄÀ©ñMemory.
+    //é‡‹æ”¾Memory.
     cudaFree(dev_reelSets);
     cudaFree(dev_winningSets);
     cudaFree(dev_winningSetCount);
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 
     printf("Output to %s... \n", outputPath.c_str());
 
-    // ¿é¥X
+    // è¼¸å‡º
     outputFile.WriteTitle(blocks, threads, RUN_TIMES, RUN_TIMES, cEnd - cStart, ELEMENTS_SIZE, COLUMN_SIZE, REEL_ROW_SIZE);
 
     //output winning rate ot csv file.
@@ -165,6 +165,6 @@ int main(int argc, char** argv) {
     delete[] winningSetCount;
 
     printf("Finish.\n");
-    system("PAUSE");
+
     return 0;
 }

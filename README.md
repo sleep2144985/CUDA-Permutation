@@ -1,6 +1,6 @@
 # CUDA-Permutation([Game-Simulation](https://github.com/Li-AnLin/Game-Simulation))
 
-用CUDA跑拉霸的排列組合與其機率。
+用CUDA模擬 [Slot machine](https://www.slotsmillion.com/en/games/) 的排列組合，並能夠模擬指定盤面的出現的機率。
 
 ## Input
 

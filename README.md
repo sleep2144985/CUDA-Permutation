@@ -6,18 +6,18 @@
 
 定義符號和轉盤上的版面及數量，以及中獎盤面的檔案路徑。
 
-![output.csv](data/ScreenShot/01-3.png)
-
 [input.csv(暫定格式)](data/input.csv)
 
-### WinningSet
+![output.csv](data/ScreenShot/01-3.png)
 
-用 symbol index 定義中獎的盤面
 
-![output.csv](data/ScreenShot/02-1.png)
+### Winning Set
+
+用**符號的索引值**定義中獎的盤面
 
 *-1 代表任何相同的圖案*
 
+![output.csv](data/ScreenShot/02-1.png)
 
 ## Output
 

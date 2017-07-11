@@ -26,3 +26,15 @@
 [output.csv(暫定格式)](data/output.csv)
 
 ![output.csv](data/ScreenShot/01-1.png)
+
+---------------------------------------------
+# Debug紀錄
+## 多個Thread同時使用同個Memory進行累加，導致累加錯誤。
+參考https://www.ptt.cc/bbs/C_and_CPP/M.1271911923.A.2B8.html
+1. 使用`atomicAdd(&x, 1)`代替`x += 1`。(效率較低，但比較好改)
+2. 每個Thread使用的memory切乾淨，最後再用CPU算Sum。(效率較高)
+### 比較效率(左:atomicAdd, 右: Thread切乾淨後Sum)
+![test1](data/ScreenShot/03.png)
+![test2](data/ScreenShot/04.png)
+![test3](data/ScreenShot/05.png)
+

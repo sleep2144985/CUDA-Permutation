@@ -35,6 +35,8 @@
 2. 每個Thread使用的memory切乾淨，最後再用CPU算Sum。(效率較高)
 ### 比較效率(左:atomicAdd, 右: Thread切乾淨後Sum)
 ![test1](data/ScreenShot/03.png)
+
 ![test2](data/ScreenShot/04.png)
+
 ![test3](data/ScreenShot/05.png)
 

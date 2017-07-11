@@ -44,7 +44,7 @@ __global__ void SetupCurand(curandState *state, unsigned long seed) {
     curand_init(seed, idx, 0, &state[idx]);
 }
 // 跑模擬
-__global__ void Simulate(curandState *states, int colunmSize, int rowSize, int* reelSets, int reelSetSize, int* winningSets, int winningSetSize, size_t runTimes, size_t* winningSetCount) {
+__global__ void Simulate(curandState *states, const int colunmSize, const int rowSize, int* reelSets, const int reelSetSize, int* winningSets, int winningSetSize, size_t runTimes, size_t* winningSetCount, const size_t NUM_OF_THREAD) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     curandState localState = states[idx];
     int* set;
@@ -58,7 +58,7 @@ __global__ void Simulate(curandState *states, int colunmSize, int rowSize, int* 
         }
         for (int n = 0; n < winningSetSize; n++) {
             if (Compare(set, (winningSets + colunmSize*rowSize*n), colunmSize*rowSize)) {
-                atomicAdd(winningSetCount + n, 1);
+                winningSetCount[idx + n * NUM_OF_THREAD] += 1;
             }
         }
         // Validate run time.
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     unsigned long cStart = clock();
     InputCSV inputFile(intputPath);
     OutputCSV outputFile(outputPath);
-    const unsigned int RUN_TIMES = 100000000;
+    const unsigned int RUN_TIMES = 50000000;
     const int COLUMN_SIZE = inputFile.getPermutationColumnSize();
     const int REEL_ROW_SIZE = inputFile.getReelRowSize();
 
@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
 
     //---------------------Begin of cuda-----------------------------
     size_t *winningSetCount;
+    size_t *host_winningSetCount;
     size_t *dev_winningSetCount;
 
     int* dev_reelSets;
@@ -104,17 +105,18 @@ int main(int argc, char** argv) {
 
     // 設定 thread & block.
     unsigned int threads = 10;
-    unsigned int blocks = 1000;
+    unsigned int blocks = 10000;
 
     unsigned int NumOfThread = blocks * threads, kernelRunTimes = ceil(RUN_TIMES / NumOfThread);
     printf("Total times: %d\nBlock count: %d\nThread count: %d\nKernelRunTimes: %d\n", RUN_TIMES, blocks, threads, kernelRunTimes);
 
     // 配置Host memory.
     winningSetCount = (size_t*) malloc(WINNING_SETS_SIZE * sizeof(size_t));
+    host_winningSetCount = (size_t*) malloc(NumOfThread * WINNING_SETS_SIZE * sizeof(size_t));
 
 
     // 配置Device memory.
-    cudaMalloc((void**) &dev_winningSetCount, WINNING_SETS_SIZE * sizeof(size_t));
+    cudaMalloc((void**) &dev_winningSetCount, NumOfThread * WINNING_SETS_SIZE * sizeof(size_t));
 
 
     // Declare reel sets.
@@ -131,10 +133,10 @@ int main(int argc, char** argv) {
     SetupCurand << <blocks, threads >> > (devStates, time(NULL));
 
     // Simulate.
-    Simulate <<<blocks, threads >> > (devStates, COLUMN_SIZE, REEL_ROW_SIZE, dev_reelSets, REEL_SET_SIZE, dev_winningSets, WINNING_SETS_SIZE, kernelRunTimes, dev_winningSetCount);
+    Simulate <<<blocks, threads >> > (devStates, COLUMN_SIZE, REEL_ROW_SIZE, dev_reelSets, REEL_SET_SIZE, dev_winningSets, WINNING_SETS_SIZE, kernelRunTimes, dev_winningSetCount, NumOfThread);
 
     // Copy device memory to host.
-    cudaMemcpy(winningSetCount, dev_winningSetCount, WINNING_SETS_SIZE * sizeof(size_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_winningSetCount, dev_winningSetCount, NumOfThread * WINNING_SETS_SIZE * sizeof(size_t), cudaMemcpyDeviceToHost);
 
 
     //釋放Memory.
@@ -143,6 +145,12 @@ int main(int argc, char** argv) {
     cudaFree(dev_winningSetCount);
 
     //---------------------End of cuda-----------------------------
+    for (size_t i = 0; i < WINNING_SETS_SIZE; i++) {
+        winningSetCount[i] = 0;
+        for (size_t t = 0; t < NumOfThread; t++) {
+            winningSetCount[i] += host_winningSetCount[i * NumOfThread + t];
+        }
+    }
 
     unsigned long cEnd = clock();
     printf("CUDA run %lu ms.\n", cEnd - cStart);

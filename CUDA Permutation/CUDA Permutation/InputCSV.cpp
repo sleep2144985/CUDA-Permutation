@@ -28,7 +28,7 @@ InputCSV::InputCSV(string path) {
 	vector<int>    reelSet;
 	string         rowSize;
 	vector<string> winingSetFiles;
-	//[Need Improve Data Structure] 
+	// [Need Improve Data Structure] 
 	vector<int>    winingSets;
 
 	// Get titles [Symbol/ Reel count/ Reel/ Row size/ Wining sets]
@@ -58,14 +58,14 @@ InputCSV::InputCSV(string path) {
 		// Only read it at first line.
 		if(inputLineCount == 1){
 			// Second column is reel count.
-			reelCount = elements[1];
+			reelCount = elements[2];
 			//Fourth column is row size.
 			rowSize = elements[3];
 		}
 
 		// Third column is reel set.
-		if(!elements[2].empty()){
-			reelSet.push_back(atoi(elements[2].c_str()));
+		if(!elements[1].empty()){
+			reelSet.push_back(atoi(elements[1].c_str()));
 		}
 		
 
@@ -157,11 +157,11 @@ string* InputCSV::getPermutationElements() {
     return this->_permutationElements;
 }
 
-int InputCSV::getWinningSetsSize(){
+int InputCSV::getPayTableSize(){
 	return _permutationWiningSetsCount;
 }
 
-string InputCSV::getWinningSetName(int i){
+string InputCSV::getPayTableFileName(int i){
 	return _winningSetNames[i];
 }
 
@@ -178,7 +178,7 @@ int InputCSV::getReelSetSize(){
 int* InputCSV::getReelSet(){
 	return _permutationReelSets;
 }
-// get winning sets
-int* InputCSV::getWinningSets(){
+// get pay table
+int* InputCSV::getPayTable(){
 	return _permutationWiningSets;
 }

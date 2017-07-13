@@ -43,12 +43,12 @@ public:
 	// get reel set.
 	int* getReelSet();
 
-	// get winning sets size
-	int getWinningSetsSize();
-	// get wining sets name
-	string getWinningSetName(int);
-	// get winning sets
-	int* getWinningSets();
+	// get pay table size
+	int getPayTableSize();
+	// get pay table file name
+	string getPayTableFileName(int);
+	// get pay table
+	int* getPayTable();
 
 };
 

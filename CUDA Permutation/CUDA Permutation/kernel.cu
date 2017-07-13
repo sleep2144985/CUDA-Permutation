@@ -44,7 +44,7 @@ __global__ void SetupCurand(curandState *state, unsigned long seed) {
     curand_init(seed, idx, 0, &state[idx]);
 }
 // 跑模擬
-__global__ void Simulate(curandState *states, const int colunmSize, const int rowSize, int* reelSets, const int reelSetSize, int* payTable, int winningSetSize, size_t runTimes, size_t* hitTimes, const size_t NUM_OF_THREAD) {
+__global__ void Simulate(curandState *states, const int colunmSize, const int rowSize, int* reelSets, const int reelSetSize, int* payTable, int winningSetSize, size_t runTimes, size_t* hitTimes, size_t* noHitTimes, const size_t NUM_OF_THREAD) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     curandState localState = states[idx];
     int* set;
@@ -56,13 +56,16 @@ __global__ void Simulate(curandState *states, const int colunmSize, const int ro
                 set[row + col * rowSize] = reelSets[(rand + row) % reelSetSize];
             }
         }
+        bool hit = false;
         for (int n = 0; n < winningSetSize; n++) {
             if (Compare(set, (payTable + colunmSize * rowSize * n), colunmSize * rowSize)) {
+                hit = true;
+                // Hit.
                 hitTimes[idx + n * NUM_OF_THREAD] += 1;
             }
         }
-        // Validate run time.
-        //atomicAdd(realRunTimes, 1);
+        // 紀錄no hit.
+        if (!hit) { noHitTimes[idx] += 1; }
         states[idx] = localState;
     }
     free(set);
@@ -108,6 +111,10 @@ int main(int argc, char** argv) {
     size_t *host_hitTimes;
     size_t *dev_hitTimes;
 
+    size_t *host_noHitTimes;
+    size_t *dev_noHitTimes;
+
+
     int* dev_reelSets;
     int* dev_winningSets;
 
@@ -122,10 +129,12 @@ int main(int argc, char** argv) {
     // 配置Host memory.
     hitTimes = (size_t*) malloc(PAY_TABLE_SIZE * sizeof(size_t));
     host_hitTimes = (size_t*) malloc(NumOfThread * PAY_TABLE_SIZE * sizeof(size_t));
+    host_noHitTimes = (size_t*) malloc(NumOfThread * sizeof(size_t));
 
 
     // 配置Device memory.
     cudaMalloc((void**) &dev_hitTimes, NumOfThread * PAY_TABLE_SIZE * sizeof(size_t));
+    cudaMalloc((void**) &dev_noHitTimes, NumOfThread * sizeof(size_t));
 
 
     // Declare reel sets.
@@ -142,10 +151,11 @@ int main(int argc, char** argv) {
     SetupCurand <<<blocks, threads >>> (devStates, time(NULL));
 
     // Simulate.
-    Simulate <<<blocks, threads >>> (devStates, COLUMN_SIZE, REEL_ROW_SIZE, dev_reelSets, STOPS_SIZE, dev_winningSets, PAY_TABLE_SIZE, kernelRunTimes, dev_hitTimes, NumOfThread);
+    Simulate <<<blocks, threads >>> (devStates, COLUMN_SIZE, REEL_ROW_SIZE, dev_reelSets, STOPS_SIZE, dev_winningSets, PAY_TABLE_SIZE, kernelRunTimes, dev_hitTimes, dev_noHitTimes, NumOfThread);
 
     // Copy device memory to host.
     cudaMemcpy(host_hitTimes, dev_hitTimes, NumOfThread * PAY_TABLE_SIZE * sizeof(size_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_noHitTimes, dev_noHitTimes, NumOfThread * sizeof(size_t), cudaMemcpyDeviceToHost);
 
 
     //釋放Memory.
@@ -154,7 +164,7 @@ int main(int argc, char** argv) {
     cudaFree(dev_hitTimes);
 
     //---------------------End of cuda-----------------------------
-    // 算總數
+    // 算 Hit.
     size_t totalHitTimes = 0;
     for (size_t i = 0; i < PAY_TABLE_SIZE; i++) {
         hitTimes[i] = 0;
@@ -162,6 +172,11 @@ int main(int argc, char** argv) {
             hitTimes[i] += host_hitTimes[i * NumOfThread + t];
         }
         totalHitTimes += hitTimes[i];
+    }
+    // 算 No Hit.
+    size_t noHitTimes = 0;
+    for (size_t t = 0; t < NumOfThread; t++) {
+        noHitTimes += host_noHitTimes[t];
     }
     // 計時完了
     unsigned long spendTime = clock() - cStart;
@@ -172,10 +187,12 @@ int main(int argc, char** argv) {
 
     // 輸出
     outputFile.WriteTitle(blocks, threads, RUN_TIMES, spendTime, STOPS_SIZE, COLUMN_SIZE, REEL_ROW_SIZE, totalHitTimes, (double)totalHitTimes / RUN_TIMES);
+    
+    // Output No hit frequency.
+    outputFile.WriteHitFreq("No Hit", noHitTimes, (double) noHitTimes / RUN_TIMES);
 
-    // Output hit frequency to file.
+    // Output hit frequency.
     for (int i = 0; i < PAY_TABLE_SIZE; i++) {
-        //[TEMP]
         outputFile.WriteHitFreq(inputFile.getPayTableFileName(i), hitTimes[i], (double) hitTimes[i] / RUN_TIMES);
     }
 

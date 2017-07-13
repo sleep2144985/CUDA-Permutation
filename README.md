@@ -8,7 +8,7 @@
 
 [input.csv(暫定格式)](data/input.csv)
 
-![output.csv](data/ScreenShot/01-3.png)
+![input.csv](data/ScreenShot/input.png)
 
 
 ### Winning Set
@@ -17,7 +17,7 @@
 
 *-1 代表任何相同的圖案*
 
-![output.csv](data/ScreenShot/02-1.png)
+![W1.txt](data/ScreenShot/W1.png)
 
 ## Output
 
@@ -25,7 +25,7 @@
 
 [output.csv(暫定格式)](data/output.csv)
 
-![output.csv](data/ScreenShot/01-1.png)
+![output.csv](data/ScreenShot/output.png)
 
 ---------------------------------------------
 # Debug紀錄
@@ -34,9 +34,9 @@
 1. 使用`atomicAdd(&x, 1)`代替`x += 1`。(效率較低，但比較好改)
 2. 每個Thread使用的memory切乾淨，最後再用CPU算Sum。(效率較高)
 ### 比較效率(左:atomicAdd, 右: Thread切乾淨後Sum)
-![test1](data/ScreenShot/03.png)
+![compare01](data/ScreenShot/compare01.png)
 
-![test2](data/ScreenShot/04.png)
+![compare02](data/ScreenShot/compare02.png)
 
-![test3](data/ScreenShot/05.png)
+![compare03](data/ScreenShot/compare03.png)
 

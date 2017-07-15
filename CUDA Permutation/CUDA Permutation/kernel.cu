@@ -24,7 +24,7 @@ __device__ bool Compare(int* set, int* winningSet, int size) {
     int Any = WINNING_ANY;
     
 	for (int i = 0; i < size; i++) {
-		if(set[i] != REEL_WILD){
+		if(set[i] != REEL_WILD&&winningSet[i] != WINNING_NONE){
 			if(winningSet[i] == WINNING_ANY){
 				// first set any
 				if(Any == WINNING_ANY){
@@ -34,7 +34,7 @@ __device__ bool Compare(int* set, int* winningSet, int size) {
 						return false;
 					}
 				}
-			}else if(winningSet[i] != WINNING_NONE){
+			}else{
 				 // ordinary compare
 				 if(set[i] != winningSet[i]){
 					 return false;
@@ -79,7 +79,7 @@ __global__ void Simulate(curandState *states, const int colunmSize, const int ro
 };
 
 int main(int argc, char** argv) {
-    const unsigned int RUN_TIMES = 50000000;
+    const unsigned int RUN_TIMES = 100000000;
 
     // 加入 Console 參數
     if (argc != 3) { printf(".exe [input file] [output file]\n"); return 1; }

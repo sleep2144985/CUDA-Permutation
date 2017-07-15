@@ -11,30 +11,37 @@
 
 #include "InputCSV.h"
 #include "OutputCSV.h"
-
+// reel set define
+#define REEL_WILD -1
+// winning set define
+#define WINNING_NONE 0
+#define WINNING_ANY  -1
 
 using namespace std;
 
 __device__ bool Compare(int* set, int* winningSet, int size) {
-    int Any = 0;
-    for (int i = 0; i < size; i++) {
-        if (set[i] != -1 && winningSet[i] > 0) {
-            // ordinary compare
-            if (set[i] != winningSet[i]) {
-                return false;
-            }
-        } else if (set[i] != -1 && winningSet[i] == -1) {
-            // any
-            if (Any == 0) {
-                Any = set[i];
-            } else {
-                if (set[i] != Any) {
-                    return false;
-                }
-            }
-        }
+	// init any.
+    int Any = WINNING_ANY;
+    
+	for (int i = 0; i < size; i++) {
+		if(set[i] != REEL_WILD){
+			if(winningSet[i] == WINNING_ANY){
+				// first set any
+				if(Any == WINNING_ANY){
+					Any = set[i];
+				} else{
+					if(set[i] != Any){
+						return false;
+					}
+				}
+			}else if(winningSet[i] != WINNING_NONE){
+				 // ordinary compare
+				 if(set[i] != winningSet[i]){
+					 return false;
+				 }
+			 }
+		}   
     }
-
     return true;
 }
 
